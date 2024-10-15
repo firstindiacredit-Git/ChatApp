@@ -16,11 +16,40 @@ const createToken = (email, userId, role) => {
 
 // Disable or restrict public signup
 export const signup = async (req, res, next) => {
-  return res.status(403).send("Signup is disabled. Please contact an admin.");
+  try {
+    const { email, password } = req.body;
+    if (email && password) {
+      const user = await User.create({ email, password });
+      const token = createToken(email, user.id, user.role);
+      res.cookie("jwt", token, {
+        maxAge,
+        secure: true,
+        sameSite: "None",
+      });
+
+      return res.status(201).json({
+        token,
+        user: {
+          id: user?.id,
+          email: user?.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          image: user.image,
+          profileSetup: user.profileSetup,
+          role: user.role,
+        },
+      });
+    } else {
+      return res.status(400).send("Email and Password Required");
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send("Internal Server Error");
+  }
 };
 
 // Login function
- // Login function
+// Login function
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -35,23 +64,15 @@ export const login = async (req, res, next) => {
         return res.status(400).send("Invalid Password");
       }
 
-      // Create token with user role
-      const token = createToken(email, user.id, user.role); // Generate the token
-      // Set the token in a cookie (if needed)
+      const token = createToken(email, user.id, user.role);
       res.cookie("jwt", token, {
         maxAge,
         secure: true,
         sameSite: "None",
       });
-      res.cookie("adminToken", token, {
-        maxAge,
-        secure: true,
-        sameSite: "None",
-      });
 
-      // Send response with user data and token
       return res.status(200).json({
-        token, // Include the token in the response
+        token,
         user: {
           id: user?.id,
           email: user?.email,
@@ -59,10 +80,9 @@ export const login = async (req, res, next) => {
           lastName: user?.lastName,
           image: user?.image,
           profileSetup: user?.profileSetup,
-          role: user?.role, // Make sure 'role' is included in the response
+          role: user?.role,
         },
       });
-
     } else {
       return res.status(400).send("Email and Password Required");
     }
