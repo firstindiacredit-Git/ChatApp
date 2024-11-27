@@ -4,7 +4,15 @@ import { verifyToken } from "../middlewares/AuthMiddleware.js";
 import multer from "multer";
 
 const messagesRoutes = Router();
-const upload = multer({ dest: "uploads/files/" });
+
+// Configure multer with file size limit
+const upload = multer({
+  dest: "uploads/files/", // Destination folder for uploaded files
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50 MB limit
+  },
+});
+
 messagesRoutes.post("/get-messages", verifyToken, getMessages);
 messagesRoutes.post(
   "/upload-file",
@@ -14,3 +22,4 @@ messagesRoutes.post(
 );
 
 export default messagesRoutes;
+ 
