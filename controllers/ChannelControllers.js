@@ -70,3 +70,54 @@ export const getChannelMessages = async (req, res, next) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const getChannelMembers = async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const userId = req.userId;
+
+    // Find the channel and check if the requesting user is a member or admin
+    const channel = await Channel.findById(channelId);
+    
+    if (!channel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    // Check if the user is a member or admin of the channel
+    const isMember = channel.members.includes(userId) || channel.admin.toString() === userId;
+    if (!isMember) {
+      return res.status(403).json({ message: "You are not a member of this channel" });
+    }
+
+    // Get the channel with populated member details
+    const channelWithMembers = await Channel.findById(channelId)
+      .populate({
+        path: "members",
+        select: "firstName lastName email image color _id"
+      })
+      .populate({
+        path: "admin",
+        select: "firstName lastName email image color _id"
+      });
+
+    // Combine admin and members for the response
+    const adminData = channelWithMembers.admin;
+    const members = channelWithMembers.members;
+    
+    // Make sure admin is included in the members list (if not already there)
+    const adminIncluded = members.some(member => member._id.toString() === adminData._id.toString());
+    
+    const allMembers = adminIncluded 
+      ? members 
+      : [adminData, ...members];
+
+    return res.status(200).json({ 
+      members: allMembers,
+      admin: adminData._id 
+    });
+    
+  } catch (error) {
+    console.error("Error getting channel members:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};

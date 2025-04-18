@@ -3,7 +3,16 @@ import User from "../model/UserModel.js"; // Import your User model to fetch use
 
 // Middleware to verify JWT token
 export const verifyToken = (req, res, next) => {
-  const token = req.cookies.jwt; // Token expected in cookies
+  // Check for JWT in cookies first
+  let token = req.cookies.jwt;
+  
+  // If no token in cookies, check Authorization header
+  if (!token && req.headers.authorization) {
+    const authHeader = req.headers.authorization;
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
 
   // Check if token exists
   if (!token) {

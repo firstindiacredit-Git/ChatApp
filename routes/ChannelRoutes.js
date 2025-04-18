@@ -3,6 +3,7 @@ import {
   createChannel,
   getChannelMessages,
   getUserChannels,
+  getChannelMembers,
 } from "../controllers/ChannelControllers.js";
 import { verifyToken } from "../middlewares/AuthMiddleware.js";
 
@@ -15,5 +16,6 @@ channelRoutes.get(
   verifyToken,
   getChannelMessages
 );
+channelRoutes.get("/get-channel-members/:channelId", verifyToken, getChannelMembers);
 
 export default channelRoutes;
