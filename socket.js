@@ -5,9 +5,10 @@ import Channel from "./model/ChannelModel.js";
 const setupSocket = (server) => {
   const io = new SocketIOServer(server, {
     cors: {
-      origin: process.env.ORIGIN,
+      origin: ["http://localhost:5173", "https://chat.pizeonfly.com"],
       methods: ["GET", "POST"],
       credentials: true,
+      allowedHeaders: ["Content-Type", "Authorization"]
     },
   });
 
